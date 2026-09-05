@@ -61,4 +61,24 @@ export const loginUser = async ({ email, password }) => {
   return { user, token };
 };
 
+export const updateProfile = async (userId, { fullName, currentPassword, newPassword }) => {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw new AppError("User no longer exists.", 401);
+
+  const data = {};
+  if (fullName !== undefined) data.fullName = fullName;
+
+  if (newPassword) {
+    const valid = await bcrypt.compare(currentPassword, user.password);
+    if (!valid) throw new AppError("Current password is incorrect.", 401);
+    data.password = await bcrypt.hash(newPassword, 12);
+  }
+
+  return prisma.user.update({
+    where: { id: userId },
+    data,
+    select: { id: true, fullName: true, email: true, role: true, createdAt: true, updatedAt: true },
+  });
+};
+
 // we used the same error message to avoid revealing whether an email address exists in the system

@@ -1,6 +1,6 @@
 import asyncHandler from "../../utils/asyncHandler.js";
 import sendResponse from "../../utils/sendResponse.js";
-import { loginUser, registerUser } from "./auth.service.js";
+import { loginUser, registerUser, updateProfile } from "./auth.service.js";
 
 export const register = asyncHandler(async (req, res) => {
   const { user, token } = await registerUser(req.validatedData);
@@ -11,6 +11,7 @@ export const register = asyncHandler(async (req, res) => {
     email: user.email,
     role: user.role,
     createdAt: user.createdAt,
+    token,
   });
 });
 
@@ -47,4 +48,13 @@ export const login = asyncHandler(async (req, res) => {
 export const getMe = asyncHandler(async (req, res) => {
 
   sendResponse(res, 200, "User profile retrieved successfully.", req.user);
+});
+
+export const updateMe = asyncHandler(async (req, res) => {
+  const user = await updateProfile(req.user.id, req.validatedData);
+  sendResponse(res, 200, "User profile updated successfully.", user);
+});
+
+export const logout = asyncHandler(async (req, res) => {
+  sendResponse(res, 200, "Logout successful. Discard the access token on the client.");
 });

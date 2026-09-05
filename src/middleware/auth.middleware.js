@@ -1,7 +1,7 @@
-import jwt from "jsonwebtoken";
 import prisma from "../config/prisma.js";
 import AppError from "../errors/AppError.js";
 import asyncHandler from "../utils/asyncHandler.js";
+import { verifyToken } from "../utils/jwt.js";
 
 const authenticate = asyncHandler(async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -15,8 +15,12 @@ const authenticate = asyncHandler(async (req, res, next) => {
   let decoded;
 
   try {
-    decoded = jwt.verify(token, process.env.JWT_SECRET);
+    decoded = verifyToken(token);
   } catch {
+    throw new AppError("Invalid or expired token.", 401);
+  }
+
+  if (!decoded || typeof decoded !== "object" || typeof decoded.userId !== "string") {
     throw new AppError("Invalid or expired token.", 401);
   }
 

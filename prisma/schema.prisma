@@ -37,6 +37,9 @@ model Product {
   updatedAt   DateTime @updatedAt
 
   orderItems  OrderItem[]
+
+  @@index([category])
+  @@index([createdAt])
 }
 
 model Order {
@@ -50,6 +53,9 @@ model Order {
 
   user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   items       OrderItem[]
+
+  @@index([userId])
+  @@index([status])
 }
 
 model OrderItem {
@@ -63,6 +69,7 @@ model OrderItem {
   product    Product  @relation(fields: [productId], references: [id])
 
   @@unique([orderId, productId])
+  @@index([productId])
 }
 
 enum OrderStatus {

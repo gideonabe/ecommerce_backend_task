@@ -1,0 +1,169 @@
+openapi: 3.0.3
+info:
+  title: E-Commerce API
+  version: 1.0.0
+  description: REST API for authentication, products, orders, simulated payment, and order tracking.
+servers:
+  - url: http://localhost:5000/api/v1
+security:
+  - bearerAuth: []
+paths:
+  /health:
+    get:
+      security: []
+      responses:
+        '200': { description: API is healthy }
+  /auth/register:
+    post:
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Register' }
+      responses:
+        '201': { description: Customer registered }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /auth/login:
+    post:
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Login' }
+      responses:
+        '200': { description: Login successful }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /auth/me:
+    get:
+      responses:
+        '200': { description: Current user profile }
+    patch:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProfileUpdate' }
+      responses:
+        '200': { description: Profile updated }
+  /products:
+    get:
+      security: []
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: category, in: query, schema: { type: string } }
+        - { name: page, in: query, schema: { type: integer, minimum: 1 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100 } }
+      responses:
+        '200': { description: Product page }
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProductInput' }
+      responses:
+        '201': { description: Product created }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /products/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+    get:
+      security: []
+      responses:
+        '200': { description: Product }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProductInput' }
+      responses:
+        '200': { description: Product updated }
+    delete:
+      responses:
+        '200': { description: Product deleted }
+  /orders:
+    get:
+      responses:
+        '200': { description: Customer orders or all orders for admin }
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items]
+              properties:
+                items:
+                  type: array
+                  items:
+                    type: object
+                    required: [productId, quantity]
+                    properties:
+                      productId: { type: string }
+                      quantity: { type: integer, minimum: 1 }
+      responses:
+        '201': { description: Order created }
+        '409': { description: Insufficient stock }
+  /orders/{id}/pay:
+    post:
+      responses:
+        '200': { description: Payment simulated and order marked paid }
+  /orders/{id}/cancel:
+    post:
+      responses:
+        '200': { description: Order cancelled and stock restored }
+  /orders/{id}/status:
+    patch:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [PAID, PROCESSING, SHIPPED, DELIVERED, CANCELLED] }
+      responses:
+        '200': { description: Order status updated }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Register:
+      type: object
+      required: [fullName, email, password]
+      properties:
+        fullName: { type: string, minLength: 3 }
+        email: { type: string, format: email }
+        password: { type: string, minLength: 8 }
+    Login:
+      allOf: [{ $ref: '#/components/schemas/Register' }]
+    ProfileUpdate:
+      type: object
+      properties:
+        fullName: { type: string }
+        currentPassword: { type: string }
+        newPassword: { type: string, minLength: 8 }
+    ProductInput:
+      type: object
+      required: [name, description, price, stock]
+      properties:
+        name: { type: string }
+        description: { type: string }
+        price: { type: number, exclusiveMinimum: 0 }
+        stock: { type: integer, minimum: 0 }
+        category: { type: string, nullable: true }
+        imageUrl: { type: string, format: uri, nullable: true }
+  responses:
+    ValidationError: { description: Validation error }
+    Unauthorized: { description: Authentication required }
+    Forbidden: { description: Administrator permission required }
+    NotFound: { description: Resource not found }

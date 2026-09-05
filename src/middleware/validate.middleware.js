@@ -1,10 +1,15 @@
-const validate = (schema) => async (req, res, next) => {
+const validate = (schema, source = "body") => async (req, res, next) => {
   try {
-    req.validatedData = await schema.parseAsync(req.body);
+    const data = await schema.parseAsync(req[source]);
+    req[source === "params" ? "validatedParams" : source === "query" ? "validatedQuery" : "validatedData"] = data;
     next();
   } catch (error) {
     next(error);
   }
 };
 
-export default validate;
+export const validateBody = (schema) => validate(schema, "body");
+export const validateParams = (schema) => validate(schema, "params");
+export const validateQuery = (schema) => validate(schema, "query");
+
+export default validateBody;
