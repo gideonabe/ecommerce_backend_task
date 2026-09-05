@@ -5,22 +5,6 @@ import { loginUser, registerUser } from "./auth.service.js";
 export const register = asyncHandler(async (req, res) => {
   const { user, token } = await registerUser(req.validatedData);
 
-  // res.status(201).json({
-  //   success: true,
-  //   message: "User registered successfully.",
-  //   data: {
-  //     user: {
-  //       id: user.id,
-  //       fullName: user.fullName,
-  //       email: user.email,
-  //       role: user.role,
-  //       createdAt: user.createdAt,
-  //     },
-  //     token,
-  //   },
-  // });
-
-
   sendResponse(res, 201, "User registered successfully.", {
     id: user.id,
     fullName: user.fullName,
@@ -61,10 +45,6 @@ export const login = asyncHandler(async (req, res) => {
 
 
 export const getMe = asyncHandler(async (req, res) => {
-  // res.status(200).json({
-  //   success: true,
-  //   data: req.user,
-  // });
 
   sendResponse(res, 200, "User profile retrieved successfully.", req.user);
 });
